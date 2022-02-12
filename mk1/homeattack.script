@@ -1,0 +1,61 @@
+var directory = "/scan/";
+var target = read(directory + "target.txt");
+var cost = 0;
+var threads = 0;
+var currentScript = [];
+disableLog("ALL");
+//tail();
+
+//Check if target is vulnerable
+print("--- Checking " + target + " for weakness ---");
+while (hasRootAccess(target) === false) {
+	print("Server locked... waiting... ")
+	sleep(10000);
+}
+//Kill old scripts
+print("-- Killing old scripts --")
+var scripts = ps("home");
+for (i = 0; i < scripts.length; ++i) {
+	//print("Script running " + scripts[i].filename);
+	//print("Arguments: " + scripts[i].args);
+	currentScript = scripts[i];
+	print("-- CurrentScript: " + currentScript.filename);
+	if (currentScript.filename === "weaken.script") {
+		print("-- Kill Weaken --");
+		kill(currentScript.filename, "home", currentScript.args[0]);
+	}
+
+	if (currentScript.filename === "grow.script") {
+		print("-- Kill Grow --");
+		kill(currentScript.filename, "home", currentScript.args[0]);
+	}
+
+	if (currentScript.filename === "steal.script") {
+		print("-- Kill Steal --");
+		kill(currentScript.filename, "home", currentScript.args[0]);
+	}
+}
+kill("weaken.script", "home", "");
+kill("grow.script", "home");
+kill("steal.script", "home");
+print("--- Server weak ---");
+//Calculate ram and use 1/4th for each script
+var currentRam = getServerMaxRam("home");
+var dedicatedRam = currentRam / 4;
+//Weaken
+cost = getScriptRam("weaken.script", "home");
+threads = Math.floor(dedicatedRam / cost);
+print("--- Running weaken on " + threads + " threads ---");
+run("weaken.script", threads, target);
+//Grow
+cost = getScriptRam("grow.script", "home");
+threads = Math.floor(dedicatedRam / cost);
+print("--- Running grow on " + threads + " threads ---");
+run("grow.script", threads, target);
+//Hack
+cost = getScriptRam("steal.script", "home");
+threads = Math.floor(dedicatedRam / cost);
+print("--- Running hack on " + threads + " threads ---");
+run("steal.script", threads, target);
+//All done!
+alert("Home is attacking: " + target);
